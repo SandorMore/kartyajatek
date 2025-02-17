@@ -3,9 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartyajatel</title>
+    <title>Card Battle Game</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f4f4f9; margin: 0; padding: 0; }
+        h1 { color: #4CAF50; font-size: 36px; margin-top: 20px; }
+        #gameArea { margin-top: 20px; }
+        .card { display: inline-block; padding: 20px; border: 2px solid #444; margin: 10px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 200px; }
+        .button {
+            padding: 12px 30px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        #stats { display: flex; justify-content: space-around; margin-bottom: 20px; padding-top: 20px; }
+        .player-info { border: 2px solid #444; padding: 15px; width: 160px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .player-info span { font-weight: bold; }
+        #info { font-size: 20px; margin-top: 20px; font-family: 'Arial', sans-serif; color: #333; }
+
+        .enemy-info { background-color: #fce4ec; padding: 15px; border-radius: 10px; border: 2px solid #f8bbd0; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .enemy-info p { font-size: 18px; color: #d32f2f; font-weight: bold; }
+
+        /* Card content layout */
+        .card-header { font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+        .card-body { font-size: 16px; color: #333; }
+        /* Emoji styling */
+        .emoji { font-size: 22px; }
+    </style>
 </head>
 <body>
-    
+    <h1>Card Battle Game</h1>
+    <div id="stats">
+        <div class="player-info" id="player1">
+            <span>Player 1</span><br>
+            ❤ Health: 10<br> ⚔ Damage: 2
+        </div>
+        <div class="player-info" id="player2">
+            <span>Player 2</span><br>
+            ❤ Health: 10<br> ⚔ Damage: 2
+        </div>
+    </div>
+    <div id="gameArea">
+        <button class="button" onclick="startGame()">Start Game</button>
+        <div id="info"></div>
+    </div>
+
+    <script>
+        let players = [ { health: 10, damage: 2 }, { health: 10, damage: 2 } ];
+        let currentPlayer = 0;
+        let enemy = null;
+        let deck = [ { name: "Goblin", health: 5, damage: 1, reward: "health" },
+                     { name: "Orc", health: 7, damage: 2, reward: "damage" },
+                     { name: "Dragon", health: 10, damage: 3, reward: "health" } ];
+
+        function updateStats() {
+            document.getElementById("player1").innerHTML = `<span>Player 1</span><br> ❤ Health: ${players[0].health}<br> ⚔ Damage: ${players[0].damage}`;
+            document.getElementById("player2").innerHTML = `<span>Player 2</span><br> ❤ Health: ${players[1].health}<br> ⚔ Damage: ${players[1].damage}`;
+        }
+
+        function startGame() {
+            document.getElementById("info").innerHTML = "<button class='button' onclick='pickEnemy()'>Pick Enemy</button>";
+        }
+
+        function pickEnemy() {
+            enemy = { ...deck[Math.floor(Math.random() * deck.length)] };
+            document.getElementById("info").innerHTML = `
+                <div class="card enemy-info">
+                    <div class="card-header">Enemy: ${enemy.name}</div>
+                    <div class="card-body">
+                        ❤ Health: ${enemy.health} <br> ⚔ Damage: ${enemy.damage}
+                    </div>
+                    <button class='button' onclick='rollDice()'>Roll Dice to Attack</button>
+                </div>
+            `;
+        }
+
+        function rollDice() {
+            let roll = Math.floor(Math.random() * 6) + 1;
+            let attackPower = roll + players[currentPlayer].damage;
+            let resultText = `Player ${currentPlayer + 1} rolled ${roll} (Total Attack: ${attackPower})`;
+           
+            if (attackPower >= enemy.health) {
+                resultText += ` - Defeated ${enemy.name}!`;
+                if (enemy.reward === "health") {
+                    players[currentPlayer].health += 2;
+                } else {
+                    players[currentPlayer].damage += 1;
+                }
+            } else {
+                resultText += ` - ${enemy.name} escaped!`;
+                // Player takes damage if the enemy escapes
+                players[currentPlayer].health -= 3;  // Example damage on escape
+            }
+
+            // Update stats and health
+            updateStats();
+
+            // Switch player turn
+            currentPlayer = (currentPlayer + 1) % 2;
+            document.getElementById("info").innerHTML = `<p>${resultText}</p>
+                <button class='button' onclick='nextTurn()'>Next Turn</button>`;
+        }
+
+        function nextTurn() {
+            document.getElementById("info").innerHTML = `<p>Player ${currentPlayer + 1}'s Turn</p>
+                <button class='button' onclick='pickEnemy()'>Pick New Enemy</button>
+                <button class='button' onclick='fightPreviousEnemy()'>Fight Previous Enemy</button>`;
+        }
+
+        function fightPreviousEnemy() {
+            if (!enemy) {
+                document.getElementById("info").innerHTML += "<p>No previous enemy available.</p>";
+                return;
+            }
+            document.getElementById("info").innerHTML = `<p>Player ${currentPlayer + 1} fights ${enemy.name}</p>
+                <button class='button' onclick='rollDice()'>Roll Dice to Attack</button>`;
+        }
+    </script>
 </body>
 </html>
